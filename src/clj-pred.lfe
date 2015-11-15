@@ -1,4 +1,4 @@
-(defmodule clj-p
+(defmodule clj-pred
   (export all))
 
 (defun string? (data)

@@ -1,11 +1,13 @@
 (defmodule clj-comp
-  (export all))
+  (export
+    (compose 1) (compose 2) (compose 3)
+    (partial 2)))
 
 ;; Compose
 ;;
 ;; Usage:
 ;;
-;; > (include-file "clj/include/compose.lfe")
+;; > (include-file "lfe/include/clj-compose.lfe")
 ;; compose
 ;; > (funcall (compose #'math:sin/1 #'math:asin/1)
 ;;            0.5)

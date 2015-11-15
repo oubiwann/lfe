@@ -145,9 +145,13 @@
 ;;
 ;; > (split-into 5 '(1 2 3 4 5 6 7 8 9 10 11 12))
 ;;
+;; XXX this is some legacy code from the lutil library and not from Clojure
+;; itself. This needs to be moved back into lutil and then removed from here.
 (defun split-at (x data)
   (list (lists:sublist data x) (lists:nthtail x data)))
 
+;; XXX this is some legacy code from the lutil library and not from Clojure
+;; itself. This needs to be moved back into lutil and then removed from here.
 (defun split-by
   ((0 data)
     data)
@@ -234,7 +238,7 @@
 ;; undefined
 (defun get-in (data keys)
   "This function is not intended to be used directly (though one certainly may)
-  but rather to be used via the macro defined in include/seq.lfe."
+  but rather to be used via the macro defined in include/clj-seq.lfe."
   ;; XXX We'll take the cheap way out right now and assume (uh-oh ...) that
   ;; any error here will be keys or indices not found, and thus return
   ;; undefined. Might be better to only do this for function_clause errors ...
