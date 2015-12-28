@@ -18,23 +18,23 @@
 ;;     #(error "No matching clause: {{expr}}")
 (defmacro clj:condp
   (`(,pred ,expr . ,clauses)
-   (fletrec ((falsey? (x) `(lists:member ,x '(undefined false)))
-             (fun* (f a) (if (is_atom f) `(fun ,f ,a) f))
+   (fletrec ((falsey? (x)
+               `(lists:member ,x '(undefined false)))
              (emit
-              ([pred expr `(,a >> ,c . ,more)]
-               `(let ((p (funcall ,(fun* pred 2) ,a ,expr)))
-                  (if ,(falsey? 'p)
-                    ,(emit pred expr more)
-                    (funcall ,(fun* c 1) p))))
-              ([pred expr `(,a ,b . ,more)]
-               `(if ,(falsey? `(funcall ,(fun* pred 2) ,a ,expr))
-                  ,(emit pred expr more)
-                  ,b))
-              ([pred expr `(,a)] a)
-              ([pred expr '()]
-               `#(error
-                  ,(lists:flatten
-                    `("No matching clause: " . ,(lfe_io_pretty:term expr)))))))
+               ([pred expr `(,a >> ,c . ,more)]
+                `(let ((p (funcall ,pred ,a ,expr)))
+                   (if ,(falsey? 'p)
+                     ,(emit pred expr more)
+                     (funcall ,c p))))
+               ([pred expr `(,a ,b . ,more)]
+                `(if ,(falsey? `(funcall ,pred ,a ,expr))
+                   ,(emit pred expr more)
+                   ,b))
+               ([pred expr `(,a)] a)
+               ([pred expr '()]
+                `#(error
+                   ,(lists:flatten
+                     `("No matching clause: " . ,(lfe_io_pretty:term expr)))))))
      (emit pred expr clauses))))
 
 ;; If `test` evaluates to `false`, evaluate and return `then`, otherwise `else`,
