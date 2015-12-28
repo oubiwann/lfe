@@ -7,13 +7,12 @@
 ;;     test-expr >> result-fn
 ;;
 ;; where `result-fn` is a unary function, if `(pred test-expr expr)` returns
-;; anything other than `undefined` or `false`, the clause is a match. If a binary
-;; clause matches, return `result-expr`. If a ternary clause matches, call
-;; `result-fn` with the result of the predicate and return the result.
-;;
-;; If no clause matches and a single default expression is given after the clauses,
-;; return it. If no default expression is given and no clause matches, return a
-;; tuple of the form:
+;; anything other than `undefined` or `false`, the clause is a match.
+;; If a binary clause matches, return `result-expr`.  If a ternary clause
+;; matches, call `result-fn` with the result of the predicate and return the
+;; result.  If no clause matches and a single default expression is given after
+;; the clauses, return it. If no default expression is given and no clause
+;; matches, return a tuple of the form:
 ;;
 ;;     #(error "No matching clause: {{expr}}")
 (defmacro clj:condp
