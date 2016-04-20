@@ -1,9 +1,117 @@
-;;;; Various macros and functions that relate to sequences
-;;;;
-(defmodule clj-seq
-  (export all))
+(defmodule clj
+  (export
+    (compose 1) (compose 2) (compose 3)
+    (drop 2)
+    (get-in 3)
+    (interleave 2)
+    (next 1) (next 2) (next 3)
+    (partial 2)
+    (reduce 2) (reduce 3)
+    (repeat 2)
+    (seq 1) (seq 2) (seq 3)
+    (split-at 2)
+    (take 2)))
 
-(include-lib "clj/include/predicates.lfe")
+(include-lib "lfe/include/clj.lfe")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Compositional functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Compose
+;;
+;; Usage:
+;;
+;; > (include-file "lfe/include/clj-compose.lfe")
+;; compose
+;; > (funcall (compose #'math:sin/1 #'math:asin/1)
+;;            0.5)
+;; 0.49999999999999994
+;; > (funcall (compose `(,#'math:sin/1
+;;                       ,#'math:asin/1
+;;                       ,(lambda (x) (+ x 1))))
+;;            0.5)
+;; 1.5
+;;
+;; Or used in another function call:
+;;
+;; > (lists:filter (compose #'not/1 #'zero?/1)
+;;                 '(0 1 0 2 0 3 0 4))
+;; (1 2 3 4)
+;;
+;; The usage above is best when 'compose' will be called from in
+;; functions like '(lists:foldl ...)' or '(lists:filter ...)', etc.
+;; However, one may also call compose in the following manner, best
+;; suited for direct usage:
+;;
+;; > (compose #'math:sin/1 #'math:asin/1 0.5)
+;; 0.49999999999999994
+;; > (compose `(,#'math:sin/1
+;;              ,#'math:asin/1
+;;              ,(lambda (x) (+ x 1))) 0.5)
+;; 1.5
+;;
+(defun compose
+  ((func-1 func-2) (when (is_function func-2))
+    (lambda (x)
+      (funcall func-1
+        (funcall func-2 x))))
+  ((funcs x)
+    (funcall (compose funcs) x)))
+
+(defun compose (f g x)
+  (funcall (compose f g) x))
+
+(defun compose (funcs)
+  (lists:foldl #'compose/2 (lambda (x) x) funcs))
+
+;; Partial
+;;
+;; Usage:
+;;
+;; > (set f (partial #'+/2 1))
+;; #Fun<lfe_eval.28.86468545>
+;; > (funcall f 2)
+;; 3
+;; > (set f (partial #'+/3 1))
+;; #Fun<lfe_eval.28.86468545>
+;; > (funcall f '(2 3))
+;; 6
+;; > (set f (partial #'+/3 '(2 3)))
+;; #Fun<lfe_eval.28.86468545>
+;; > (funcall f 4)
+;; 9
+;; > (set f (partial #'+/4 '(2 3)))
+;; #Fun<lfe_eval.28.86468545>
+;; > (funcall f '(4 5))
+;; 14
+;;
+(defun partial
+  "The partial function is arity 2 where the first parameter must be a
+  function and the second parameter may either be a single item or a list of
+  items.
+
+  When funcall is called against the result of the partial call, a second
+  parameter is applied to the partial function. This parameter too may be
+  either a single item or a list of items."
+  ((func args-1) (when (is_list args-1))
+    (match-lambda
+      ((args-2) (when (is_list args-2))
+        (apply func (++ args-1 args-2)))
+      ((arg-2)
+        (apply func (++ args-1 `(,arg-2))))))
+  ((func arg-1)
+    (match-lambda
+      ((args-2) (when (is_list args-2))
+        (apply func (++ `(,arg-1) args-2)))
+      ((arg-2)
+        (funcall func arg-1 arg-2)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Sequence functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 
 ;; List sequence wrapper functions
 ;;
@@ -150,19 +258,6 @@
 (defun split-at (x data)
   (list (lists:sublist data x) (lists:nthtail x data)))
 
-;; XXX this is some legacy code from the lutil library and not from Clojure
-;; itself. This needs to be moved back into lutil and then removed from here.
-(defun split-by
-  ((0 data)
-    data)
-  ((_ '())
-   '())
-  ((x data) (when (> x (length data)))
-   (split-by (length data) data))
-  ((x data)
-   (cons (lists:sublist data x)
-         (split-by x (lists:nthtail x data)))))
-
 ;; XXX finish implementation for this
 ;;(defun split-into
 ;;  ((_ '()) '())
@@ -243,31 +338,31 @@
   ;; any error here will be keys or indices not found, and thus return
   ;; undefined. Might be better to only do this for function_clause errors ...
   (try
-    (cond ((clj-p:proplist? data) (get-in-proplist data keys))
-          ((clj-p:dict? data) (get-in-dict data keys))
-          ((clj-p:list? data) (get-in-list data keys))
-          ((clj-p:map? data) (get-in-map data keys)))
+    (cond ((proplist? data) (-get-in-proplist data keys))
+          ((dict? data) (-get-in-dict data keys))
+          ((list? data) (-get-in-list data keys))
+          ((map? data) (-get-in-map data keys)))
     (catch (_
       'undefined))))
 
-(defun get-in-list (data indices)
+(defun -get-in-list (data indices)
   (lists:foldl #'lists:nth/2 data indices))
 
-(defun get-in-proplist (data keys)
+(defun -get-in-proplist (data keys)
   (lists:foldl #'proplists:get_value/2 data keys))
 
-(defun get-in-dict (data keys)
-  (get-in-kv #'dict:fetch/2 data keys))
+(defun -get-in-dict (data keys)
+  (-get-in-kv #'dict:fetch/2 data keys))
 
-(defun get-in-map (data keys)
-  (get-in-kv #'maps:get/2 data keys))
+(defun -get-in-map (data keys)
+  (-get-in-kv #'maps:get/2 data keys))
 
-(defun get-in-kv
+(defun -get-in-kv
   ((func data (cons key keys))
     (let ((value (funcall func key data)))
-      (if (orelse (clj-p:proplist? value)
-                  (clj-p:dict? value)
-                  (clj-p:map? value))
+      (if (orelse (proplist? value)
+                  (dict? value)
+                  (map? value))
           (get-in value keys)
           value))))
 
