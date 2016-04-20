@@ -1,4 +1,5 @@
 (defmodule clj
+  ;; TODO: write docstring
   (export
     (compose 1) (compose 2) (compose 3)
     (drop 2)
@@ -10,7 +11,8 @@
     (repeat 2)
     (seq 1) (seq 2) (seq 3)
     (split-at 2)
-    (take 2)))
+    (take 2))
+  (export-macro condp if-not when-not not=))
 
 (include-lib "lfe/include/clj.lfe")
 
