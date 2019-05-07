@@ -8,12 +8,11 @@ script: make travis
 notifications:
   disabled: true
 otp_release:
-  - 22.0-rc3
-  - 21.3.7
-  - 20.3.8.21
-  - 19.3.6.13
-  - 18.3.4.11
-  - 17.5.3
-  - R16B03-2
+  - 21.3
+  - 20.3
+  - 19.3
+  - 18.3
+  - 17.5
+  - R16B03-1
   # - R15B03
   # - R14B04
